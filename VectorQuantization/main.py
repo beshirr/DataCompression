@@ -1,6 +1,16 @@
 from VectorQuantization import VectorQuantization
 import os
 
+
+def compression_ratio(originalFile, compressedFiles):
+    originalSize = os.path.getsize(originalFile)
+    compressedSize = 0
+    for file in compressedFiles:
+        compressedSize += os.path.getsize(file)
+    
+    return originalSize / compressedSize
+
+
 def encode():
     while True:
         imagePath = input("Enter image path: ")
@@ -21,6 +31,7 @@ def encode():
     vectorWidth = int(input("Enter vector width: "))
     VQ: VectorQuantization = VectorQuantization(imagePath, codeBookSize, vectorHeight, vectorWidth)
     VQ.Encode('EncodingStream.txt', 'CodeBook.txt')
+    print(f"Compression Ratio: {compression_ratio(imagePath, ['EncodingStream.txt', 'CodeBook.txt'])}")
 
 
 def decode():
