@@ -43,10 +43,10 @@ class TwoDPredictiveCoding:
 
         for row in range(1, self.imageHeight):
             for col in range(1, self.imageWidth):
-                A = self.predictedPixels[row][col - 1]
-                B = self.predictedPixels[row - 1][col - 1]
-                C = self.predictedPixels[row - 1][col]
-                self.predictedPixels[row][col] = PredictNext_Pixel(A, B, C)
+                A = self.originalImagePixels[col - 1, row]
+                B = self.originalImagePixels[col - 1, row - 1]
+                C = self.originalImagePixels[col, row - 1]
+                self.predictedPixels[row][col] = PredictNext_Pixel(A[:3], B[:3], C[:3])
 
         for row in range(1, self.imageHeight):
             for col in range(1, self.imageWidth):

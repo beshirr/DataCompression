@@ -25,7 +25,7 @@ def PredictNext(A: int, B: int, C: int) -> int:
 
 def PredictNext_Pixel(p_A: tuple[int, int, int], p_B: tuple[int, int, int], p_C: tuple[int, int, int]) -> tuple[
     int, int, int]:
-    result: list = [0,0,0]
+    result: list = [0, 0, 0]
     for i in range(3):
         result[i] = PredictNext(p_A[i], p_B[i], p_C[i])
 
