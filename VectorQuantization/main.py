@@ -59,11 +59,11 @@ def main():
         print("3. Exit")
         choice = input("Enter your choice: ")
 
-        if (choice == "1"):
+        if choice == "1":
             encode()
-        elif (choice == "2"):
+        elif choice == "2":
             decode()
-        elif (choice == "3"):
+        elif choice == "3":
             break
 
 
