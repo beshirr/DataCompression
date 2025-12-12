@@ -1,7 +1,8 @@
 from UniformQuantizerTable import UniformQuantizer
 from PIL import Image
-from utilities import PredictNext_Pixel, PixelDifference, GetMaxTupleFrom2DArray, GetMinTupleFrom2DArray, GetCode, TuplesTo2DGrid, PixelsToImage
-
+from utilities import PredictNext_Pixel, PixelDifference, GetMaxTupleFrom2DArray, GetMinTupleFrom2DArray, GetCode, \
+    TuplesTo2DGrid, PixelsToImage, ClampPixelToAllowedRanges
+import ast
 
 # default pillow image access is [col,row]
 
@@ -81,6 +82,7 @@ class TwoDPredictiveCoding:
             errorsFile.write(TuplesTo2DGrid(self.errorsList))
 
         with open(filePath, "w") as file:
+            file.write(str(self.numberOfBits) + "\n")
             file.write(str(self.firstRow) + "\n")
             file.write(str(self.firstCol) + "\n")
             file.write(str(self.imageWidth) + "," + str(self.imageHeight) + "\n")
@@ -95,3 +97,63 @@ class TwoDPredictiveCoding:
                     finalCode = firstQCode + secondQCode + thirdQCode
                     file.write(finalCode)
 
+
+    @staticmethod
+    def Decode(filePath: str):
+        with open(filePath, 'r') as f:
+            numberOfBits = int(f.readline().strip())
+            firstRow: list[tuple[int, int, int]] = ast.literal_eval(f.readline().strip())
+            firstCol: list[tuple[int, int, int]] = ast.literal_eval(f.readline().strip())
+            imageWidth, imageHeight = map(int, f.readline().split(","))
+
+            firstQInverse = list(map(int, f.readline().strip().split(",")))
+            secondQInverse = list(map(int, f.readline().strip().split(",")))
+            thirdQInverse = list(map(int, f.readline().strip().split(",")))
+            bitstream = f.readline().strip()
+
+        reconstructedPixels = [[(0, 0, 0) for _ in range(imageWidth)] for _ in range(imageHeight)]
+
+        for col in range(imageWidth):
+            reconstructedPixels[0][col] = firstRow[col]
+        
+        for row in range(imageHeight):
+            reconstructedPixels[row][0] = firstCol[row]
+
+        idx = 0
+
+        for row in range(1, imageHeight):
+            for col in range(1, imageWidth):
+                firstBits = bitstream[idx: idx + numberOfBits]
+                idx += numberOfBits
+                secondBits = bitstream[idx: idx + numberOfBits]
+                idx += numberOfBits
+                thirdBits = bitstream[idx: idx + numberOfBits]
+                idx += numberOfBits
+
+                # Convert bits → integer (quantized index)
+                R_q = int(firstBits, 2)
+                G_q = int(secondBits, 2)
+                B_q = int(thirdBits, 2)
+
+                # De-quantize errors using Q inverse tables
+                R_err = firstQInverse[R_q]
+                G_err = secondQInverse[G_q]
+                B_err = thirdQInverse[B_q]
+
+                
+                A = reconstructedPixels[row][col - 1]
+                B = reconstructedPixels[row - 1][col - 1]
+                C = reconstructedPixels[row - 1][col]
+                predicted = PredictNext_Pixel(A[:3], B[:3], C[:3])
+
+                reconstructed = (
+                    ClampPixelToAllowedRanges(predicted[0] + R_err),
+                    ClampPixelToAllowedRanges(predicted[1] + G_err),
+                    ClampPixelToAllowedRanges(predicted[2] + B_err)
+                )   
+                
+                reconstructedPixels[row][col] = reconstructed 
+
+        img = PixelsToImage(reconstructedPixels)
+        img.save('DecodedImage.jpg')
+        return img

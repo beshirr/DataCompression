@@ -23,35 +23,30 @@ def encode():
     predictiveCoding.Encode(outputFile)
 
 
-def main():
+def decode():
     while True:
-        print("2D Predictive Coding Compression")
-        print("1. Encode")
-        print("2. Exit")
-        choice = input("Enter your choice: ")
-
-        if choice == "1":
-            encode()
-        elif choice == "2":
+        filePath = input("Enter decompressed metadata file path: ")
+        if os.path.exists(filePath):
             break
-
-
-if __name__ == "__main__":
-    main()
+        print("File not found. Please try again.")
+    TwoDPredictiveCoding.Decode(filePath)
 
 
 def main():
     while True:
         print("2D Predictive Coding Compression")
         print("1. Encode")
-        print("2. Exit")
+        print("2. Decode")
+        print("3. Exit")
         choice = input("Enter your choice: ")
 
         if choice == "1":
             encode()
         elif choice == "2":
+            decode()
+        if choice == "3":
+            print("Goodbye!")
             break
-
 
 if __name__ == "__main__":
     main()
