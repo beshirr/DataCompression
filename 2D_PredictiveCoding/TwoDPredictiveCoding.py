@@ -112,6 +112,7 @@ class TwoDPredictiveCoding:
             bitstream = f.readline().strip()
 
         reconstructedPixels = [[(0, 0, 0) for _ in range(imageWidth)] for _ in range(imageHeight)]
+        dequantizedErrors = [[(0, 0, 0) for _ in range(imageWidth - 1)] for _ in range(imageHeight - 1)]
 
         for col in range(imageWidth):
             reconstructedPixels[0][col] = firstRow[col]
@@ -140,7 +141,10 @@ class TwoDPredictiveCoding:
                 G_err = secondQInverse[G_q]
                 B_err = thirdQInverse[B_q]
 
-                
+                dq = (R_err, G_err, B_err)
+
+                dequantizedErrors[row - 1][col - 1] = dq
+
                 A = reconstructedPixels[row][col - 1]
                 B = reconstructedPixels[row - 1][col - 1]
                 C = reconstructedPixels[row - 1][col]
@@ -153,7 +157,8 @@ class TwoDPredictiveCoding:
                 )   
                 
                 reconstructedPixels[row][col] = reconstructed 
-
+        dequantizedErrorsPixels = PixelsToImage(dequantizedErrors)
+        dequantizedErrorsPixels.save('dequantizedErrors.jpg')
         img = PixelsToImage(reconstructedPixels)
         img.save('DecodedImage.jpg')
         return img
