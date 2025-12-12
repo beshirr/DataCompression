@@ -9,6 +9,7 @@ def encode():
             break
         print("File not found. Please try again.")
 
+    numberOfBits: int = 2
     while True:
         try:
             numberOfBits = int(input("Enter number of bits (default is 2): "))
@@ -19,7 +20,9 @@ def encode():
             print("Invalid input. Please enter an integer.")
 
     outputFile = "EncodedStream.txt"
-    predictiveCoding = TwoDPredictiveCoding(numberOfBits, imagePath)
+    predictiveCoding = (TwoDPredictiveCoding
+                        (imagePath, numberOfBits))
+    print("compression ratio:", predictiveCoding.GetCompressionRatio())
     predictiveCoding.Encode(outputFile)
 
 

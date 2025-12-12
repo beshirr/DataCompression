@@ -51,3 +51,9 @@ class UniformQuantizer:
 
         result += str(values[len(values) - 1])
         return result
+
+    def GetMax(self) -> int:
+        return self.Max
+
+    def GetMin(self) -> int:
+        return self.Min

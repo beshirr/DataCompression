@@ -7,7 +7,7 @@ import ast
 # default pillow image access is [col,row]
 
 class TwoDPredictiveCoding:
-    def __init__(self, numberOfBits: int, imgPath: str):
+    def __init__(self, imgPath: str, numberOfBits: int = 2):
         self.numberOfBits = numberOfBits
         self.img = Image.open(imgPath)
         self.originalImagePixels: Image.core.PixelAccess = self.img.load()
@@ -17,6 +17,15 @@ class TwoDPredictiveCoding:
         self.firstCol: list[tuple[int, int, int]] = self._GetFirstColumn()
         self.predictedPixels: list[list[tuple[int, int, int]]] = [[(0, 0, 0) for _ in range(self.imageWidth)] for _ in range(self.imageHeight)]
         self.errorsList: list[list[tuple[int, int, int]]] = self.ConstructErrors()
+
+    def _GetOriginalImageSize(self) -> int:
+        return self.imageWidth * self.imageHeight * 3 * 8
+
+    def _GetCompressedSize(self) -> int:
+        rows = self.imageHeight - 1
+        cols = self.imageWidth - 1
+        totalBits = rows * cols * self.numberOfBits * 3
+        return totalBits
 
     def _GetFirstRow(self) -> list[tuple[int, int, int]]:
         result: list[tuple[int, int, int]] = []
@@ -57,6 +66,11 @@ class TwoDPredictiveCoding:
 
         return errors
 
+    def GetCompressionRatio(self) -> float:
+        originalSize = self._GetOriginalImageSize()
+        compressedSize = self._GetCompressedSize()
+        return compressedSize / originalSize
+
     # the content of the file is as following
     #  line number 1 => first row in the image
     #  line number 2 => first col in the image
@@ -96,7 +110,6 @@ class TwoDPredictiveCoding:
                     thirdQCode = GetCode(thirdQ.Q(pixel[2]), self.numberOfBits)
                     finalCode = firstQCode + secondQCode + thirdQCode
                     file.write(finalCode)
-
 
     @staticmethod
     def Decode(filePath: str):
@@ -148,15 +161,15 @@ class TwoDPredictiveCoding:
                 A = reconstructedPixels[row][col - 1]
                 B = reconstructedPixels[row - 1][col - 1]
                 C = reconstructedPixels[row - 1][col]
-                predicted = PredictNext_Pixel(A[:3], B[:3], C[:3])
+                predicted = PredictNext_Pixel(A, B, C)
 
                 reconstructed = (
                     ClampPixelToAllowedRanges(predicted[0] + R_err),
                     ClampPixelToAllowedRanges(predicted[1] + G_err),
                     ClampPixelToAllowedRanges(predicted[2] + B_err)
-                )   
-                
-                reconstructedPixels[row][col] = reconstructed 
+                )
+
+                reconstructedPixels[row][col] = reconstructed
         dequantizedErrorsPixels = PixelsToImage(dequantizedErrors)
         dequantizedErrorsPixels.save('dequantizedErrors.jpg')
         img = PixelsToImage(reconstructedPixels)
